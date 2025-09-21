@@ -1,0 +1,425 @@
+/* === GarethAPI.com Design Language - Manage Product Tree Web-AI === */
+
+/* === Design Tokens === */
+:root {
+  --gapi-brown:  #46350A; /* Hero/headers, brand background */
+  --gapi-purple: #DDBBFF; /* GarethAPI.com brand highlight */
+  --gapi-orange: #FF9100; /* Accents, notices */
+  --gapi-red:    #C61C00; /* Errors/warnings */
+  --gapi-green:  #0B4000; /* Success/confirmation, footers */
+  --gapi-violet: #6400FF; /* Tool titles (e.g. API Designer) */
+  --gapi-white:  #FFFFFF; /* Background */
+  --gapi-black:  #000000; /* Text */
+
+  --gapi-font-heading: 'Madimi One', sans-serif;
+  --gapi-font-body: 'Hanken Grotesk', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, 'Helvetica Neue', Arial, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+  --gapi-font-accent: 'Neuton', Georgia, 'Times New Roman', serif;
+
+  /* Layout variables */
+  --shadow: 0 5px 18px rgba(0,0,0,.04);
+  --shadow-lg: 0 20px 25px -5px rgba(0,0,0,.1);
+  --radius: 16px;
+  --line: #e6e1db;
+}
+
+/* === Local Font Faces === */
+@font-face {
+  font-family: 'Madimi One';
+  src: url('fonts/MadimiOne-Regular.ttf?v=2') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Neuton';
+  src: url('fonts/Neuton-Regular.ttf?v=2') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Core Elements === */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth !important;
+}
+
+body {
+  font-family: var(--gapi-font-accent) !important;
+  background: #f8f9fa !important;
+  color: var(--gapi-black) !important;
+  line-height: 1.6;
+}
+
+/* === Typography === */
+h1 {
+  font-family: var(--gapi-font-heading) !important;
+  font-size: 2.5rem;
+  color: var(--gapi-violet) !important;
+  margin-bottom: 10px;
+}
+
+h2, h3, h4, h5, h6 {
+  font-family: var(--gapi-font-body) !important;
+  color: var(--gapi-violet) !important;
+  margin: 24px 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--gapi-violet);
+}
+
+h2 {
+  font-size: 1.8rem;
+  margin-top: 0;
+}
+
+h3 {
+  font-size: 1.4rem;
+}
+
+h4 {
+  font-size: 1.2rem;
+}
+
+p {
+  margin: 12px 0;
+  line-height: 1.6;
+  color: var(--gapi-black);
+}
+
+/* === Layout === */
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* === Header Card - Clean White Background === */
+.header {
+  background: var(--gapi-white) !important;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  margin: 20px;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.header h1 {
+  font-family: var(--gapi-font-heading) !important;
+  font-size: 2.5rem;
+  color: var(--gapi-violet) !important;
+  margin-bottom: 10px;
+}
+
+.header p {
+  color: var(--gapi-black) !important;
+  font-size: 1.1rem;
+  font-family: var(--gapi-font-body) !important;
+}
+
+/* === Main Content === */
+.main-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* === Cards === */
+.card {
+  background: var(--gapi-white);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.card-header {
+  margin-bottom: 20px;
+}
+
+.card-header h2,
+.card-header h3 {
+  margin-top: 0;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+/* === AI Status Section === */
+.ai-status-section {
+  background: var(--gapi-white);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 20px;
+}
+
+.ai-status {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  border-radius: 8px;
+  background: #f8f9fa;
+  border-left: 4px solid var(--gapi-orange);
+}
+
+.ai-status.connected {
+  background: #e8f5e8;
+  border-left-color: var(--gapi-green);
+}
+
+.ai-status.error {
+  background: #ffeaea;
+  border-left-color: var(--gapi-red);
+}
+
+.status-indicator {
+  font-size: 1.2rem;
+  animation: pulse 2s infinite;
+}
+
+.status-indicator.connected {
+  animation: none;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* === Buttons === */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--gapi-font-body) !important;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: 4px;
+}
+
+.btn-primary {
+  background: var(--gapi-violet);
+  color: var(--gapi-white);
+}
+
+.btn-primary:hover {
+  background: #5a00e6;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: var(--gapi-green);
+  color: var(--gapi-white);
+}
+
+.btn-secondary:hover {
+  background: #0a3500;
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  background: var(--gapi-white);
+  color: var(--gapi-violet);
+  border: 2px solid var(--gapi-violet);
+}
+
+.btn-outline:hover {
+  background: var(--gapi-violet);
+  color: var(--gapi-white);
+  transform: translateY(-1px);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* === Form Elements === */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-family: var(--gapi-font-body) !important;
+  font-weight: 600;
+  color: var(--gapi-black);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  font-family: var(--gapi-font-accent) !important;
+  font-size: 1rem;
+  background: var(--gapi-white);
+  color: var(--gapi-black);
+  transition: border-color 0.2s ease;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--gapi-violet);
+  box-shadow: 0 0 0 3px rgba(100, 0, 255, 0.1);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+/* === Status Messages === */
+.status-message {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin: 16px 0;
+  font-family: var(--gapi-font-accent) !important;
+}
+
+.status-message.success {
+  background: #e8f5e8;
+  color: var(--gapi-green);
+  border-left: 4px solid var(--gapi-green);
+}
+
+.status-message.error {
+  background: #ffeaea;
+  color: var(--gapi-red);
+  border-left: 4px solid var(--gapi-red);
+}
+
+.status-message.warning {
+  background: #fff3cd;
+  color: var(--gapi-orange);
+  border-left: 4px solid var(--gapi-orange);
+}
+
+.status-message.info {
+  background: #d1ecf1;
+  color: var(--gapi-violet);
+  border-left: 4px solid var(--gapi-violet);
+}
+
+/* === Loading States === */
+.loading {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(100, 0, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: var(--gapi-violet);
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* === Responsive Design === */
+@media (max-width: 768px) {
+  .container {
+    padding: 10px;
+  }
+  
+  .header {
+    margin: 10px;
+    padding: 15px;
+  }
+  
+  .header h1 {
+    font-size: 2rem;
+  }
+  
+  .card {
+    margin: 10px 0;
+    padding: 15px;
+  }
+  
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* === Additional Web-AI Specific Styles === */
+.ai-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ai-response {
+  background: #f8f9fa;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  font-family: var(--gapi-font-accent) !important;
+  line-height: 1.6;
+}
+
+.ai-response pre {
+  background: var(--gapi-white);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 12px;
+  overflow-x: auto;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.9rem;
+}
+
+.model-selector {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.model-selector select {
+  width: auto;
+  min-width: 200px;
+}
+
+.temperature-control {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.temperature-control input[type="range"] {
+  width: 100px;
+}
+
+.temperature-value {
+  font-family: var(--gapi-font-body) !important;
+  font-weight: 600;
+  color: var(--gapi-violet);
+  min-width: 40px;
+}

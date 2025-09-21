@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Tree Manager - Web Version</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <h1 class="gapi-heading gapi-title-violet">🌳 Product Tree Manager</h1>
+                <p>Import, analyze, and manage your product hierarchy</p>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- File Upload Section -->
+            <div class="upload-section">
+                <div class="upload-area" id="dropZone">
+                    <div class="upload-content">
+                        <div class="upload-icon">📁</div>
+                        <h3>Import Product Tree XML</h3>
+                        <p>Drag and drop your XML file here, or click to browse</p>
+                        <input type="file" id="xmlFile" accept=".xml" style="display: none;">
+                        <button class="btn-primary" onclick="document.getElementById('xmlFile').click()">
+                            Choose XML File
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Section -->
+            <div class="status-section">
+                <div id="status" class="status-message">
+                    <p>Ready to import your Product Tree XML file</p>
+                </div>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="toolbar" id="toolbar" style="display: none;">
+                <div class="toolbar-left">
+                    <button id="btnExpandAll" class="btn-outline">Expand All</button>
+                    <button id="btnCollapseAll" class="btn-outline">Collapse All</button>
+                    <button id="btnExportXML" class="btn-outline">Export XML</button>
+                    <button id="btnExportJira" class="btn-outline">Export Jira CSV</button>
+                    <button id="btnDebug" class="btn-outline">Debug Tree</button>
+                </div>
+                <div class="toolbar-right">
+                    <input type="text" id="searchInput" placeholder="Search nodes..." class="search-input">
+                </div>
+            </div>
+
+            <!-- Tree Layout -->
+            <div class="tree-layout">
+                <div id="productTree" class="tree-container">
+                    <!-- Tree will be rendered here -->
+                </div>
+                <div class="node-details-panel">
+                    <h3>Node Details</h3>
+                    <div id="nodeDetails" class="node-details-container">
+                        <p>Select a node to view details</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Chat Section -->
+            <div class="ai-section" id="aiSection" style="display: none;">
+                <div class="ai-header">
+                    <h3>🤖 AI Analysis</h3>
+                    <p>Ask questions about your product tree</p>
+                </div>
+                <div class="ai-chat" id="aiChat">
+                    <div class="ai-message">
+                        <div class="ai-avatar">🤖</div>
+                        <div class="ai-content">
+                            <p>Hello! I'm here to help you analyze your product tree. You can ask me about:</p>
+                            <ul>
+                                <li>Identifying duplicate or similar nodes</li>
+                                <li>Suggesting improvements to the hierarchy</li>
+                                <li>Analyzing dependencies and relationships</li>
+                                <li>Finding gaps or missing components</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="ai-input">
+                    <input type="text" id="aiInput" placeholder="Ask me about your product tree..." class="ai-text-input">
+                    <button id="btnSendAI" class="btn-primary">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Work Item Modal -->
+    <div id="workItemModal" class="modal">
+        <div class="modal-content">
+            <span id="closeModal" class="close">&times;</span>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

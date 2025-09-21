@@ -1,0 +1,26 @@
+{
+  "name": "product-tree-manager-ai",
+  "version": "1.0.0",
+  "description": "Product Tree Manager with Local AI Integration",
+  "main": "ollama-proxy.js",
+  "scripts": {
+    "start": "node ollama-proxy.js",
+    "dev": "nodemon ollama-proxy.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": [
+    "product-tree",
+    "ollama",
+    "ai",
+    "local-llm"
+  ],
+  "author": "Futurematic",
+  "license": "MIT"
+}

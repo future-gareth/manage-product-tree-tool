@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Manage Product Tree</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌳</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=9" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <div class="logo">
+        <h1 class="gapi-heading">Manage Product Tree</h1>
+        <p>Import and manage your product hierarchy with AI assistance</p>
+      </div>
+      <div class="header-actions">
+        <button id="btnAddProduct" class="btn btn-secondary">
+          <i class="fas fa-plus"></i> Add Product
+        </button>
+        <button id="btnRefresh" class="btn btn-outline">
+          <i class="fas fa-sync"></i> Refresh
+        </button>
+        <button id="btnClearCache" class="btn btn-outline">
+          <i class="fas fa-trash"></i> Clear Cache
+        </button>
+        <button id="btnExportXML" class="btn btn-outline">
+          <i class="fas fa-file-code"></i> Export to XML
+        </button>
+        <button id="btnExportJira" class="btn btn-outline">
+          <i class="fas fa-file-csv"></i> Export to Jira
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="main-layout">
+    <!-- Left Panel: Product Tree -->
+    <div class="left-panel">
+      <div class="panel">
+        <div class="panel-header">
+          <h3><i class="fas fa-sitemap"></i> Product Tree</h3>
+          <div class="panel-actions">
+            <input id="searchInput" class="search-input" placeholder="Search nodes..." />
+          </div>
+        </div>
+        <div class="panel-body">
+          <div id="productTree" class="tree-container">
+            <div class="tree-empty">
+              <i class="fas fa-upload"></i>
+              <h4>No Product Tree Loaded</h4>
+              <p>Import a Product Tree XML file to get started</p>
+              <div class="file-upload-area" id="dropZone">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p>Drop Product Tree XML here or click to browse</p>
+                <input type="file" id="xmlFile" accept=".xml,text/xml" style="display: none;" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel: Details -->
+    <div class="right-panel">
+      <!-- Selected Item Details -->
+      <div class="panel" id="itemDetailsPanel" style="display: none;">
+        <div class="panel-header">
+          <h3><i class="fas fa-info-circle"></i> Item Details</h3>
+          <div class="panel-actions">
+            <button id="btnFocusDot" class="btn btn-primary btn-small">
+              <i class="fas fa-robot"></i> Focus Dot
+            </button>
+            <button id="btnDeleteItem" class="btn btn-outline btn-small">
+              <i class="fas fa-trash"></i> Delete
+            </button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div id="itemDetails" class="item-details">
+            <!-- Item details will be populated here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Work Items Table -->
+      <div class="panel" id="workItemsPanel" style="display: none;">
+        <div class="panel-header">
+          <h3><i class="fas fa-tasks"></i> Work Items</h3>
+          <div class="panel-actions">
+            <span id="workItemsCount" class="item-count">0 items</span>
+            <button id="btnAddWorkItem" class="btn btn-secondary btn-small">
+              <i class="fas fa-plus"></i> Add Work Item
+            </button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="table-container">
+            <table id="workItemsTable" class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Title</th>
+                  <th>Status</th>
+                  <th>Priority</th>
+                  <th>Owner</th>
+                  <th>Estimate</th>
+                  <th>Tags</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Work items will be populated here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dot Chat -->
+      <div class="panel" id="dotChatPanel">
+        <div class="panel-header">
+          <h3><i class="fas fa-robot"></i> Dot Chat</h3>
+          <div class="panel-actions">
+            <div class="ai-status" id="aiStatus">
+              <span class="status-indicator">🟡</span>
+              <span class="status-text">Ready</span>
+            </div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div id="aiMessages" class="ai-messages">
+            <div class="ai-message">
+              <div class="message-avatar">
+                <i class="fas fa-robot"></i>
+              </div>
+              <div class="message-content">
+                <p>Hello! I'm Dot, your AI assistant. I can help you analyze your product tree, suggest improvements, and answer questions about your product strategy.</p>
+              </div>
+            </div>
+          </div>
+          <div class="ai-input-container">
+            <input id="aiInput" class="ai-input" placeholder="Ask Dot about your product tree..." />
+            <button id="btnSendAI" class="btn btn-primary">
+              <i class="fas fa-paper-plane"></i> Send
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import Summary -->
+  <div id="importSummary" class="import-summary"></div>
+
+  <!-- Work Item Modal -->
+  <div id="workItemModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Work Item Details</h3>
+        <button id="closeModal" class="modal-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="workItemContent">
+          <!-- Work item content will be populated here -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

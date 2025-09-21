@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Tree Manager - With Local AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=2">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <h1 class="gapi-heading">🌳 Product Tree Manager</h1>
+                <p>Import, analyze, and manage your product hierarchy with local AI</p>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- AI Connection Status -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>AI Connection Status</h3>
+                </div>
+                <div id="aiStatus" class="ai-status">
+                    <div class="status-indicator" id="statusIndicator">🔴</div>
+                    <span id="statusText">Checking AI connection...</span>
+                    <button id="btnTestAI" class="btn btn-outline">Test AI</button>
+                </div>
+            </div>
+
+            <!-- File Upload Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Import Product Tree XML</h3>
+                </div>
+                <div class="upload-area" id="dropZone">
+                    <div class="upload-content">
+                        <div class="upload-icon">📁</div>
+                        <p>Drag and drop your XML file here, or click to browse</p>
+                        <input type="file" id="xmlFile" accept=".xml" style="display: none;">
+                        <button class="btn btn-primary" onclick="document.getElementById('xmlFile').click()">
+                            Choose XML File
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Section -->
+            <div class="card">
+                <div id="status" class="status-message">
+                    <p>Ready to import your Product Tree XML file</p>
+                </div>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="card" id="toolbar" style="display: none;">
+                <div class="card-header">
+                    <h3>Tools</h3>
+                </div>
+                <div class="toolbar">
+                    <div class="toolbar-left">
+                        <button id="btnExpandAll" class="btn btn-outline">Expand All</button>
+                        <button id="btnCollapseAll" class="btn btn-outline">Collapse All</button>
+                        <button id="btnExportXML" class="btn btn-outline">Export XML</button>
+                        <button id="btnExportJira" class="btn btn-outline">Export Jira CSV</button>
+                        <button id="btnDebug" class="btn btn-outline">Debug Tree</button>
+                    </div>
+                    <div class="toolbar-right">
+                        <input type="text" id="searchInput" placeholder="Search nodes..." class="search-input">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tree Layout -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Product Tree</h3>
+                </div>
+                <div class="tree-layout">
+                    <div id="productTree" class="tree-container">
+                        <!-- Tree will be rendered here -->
+                    </div>
+                    <div class="node-details-panel">
+                        <h4>Node Details</h4>
+                        <div id="nodeDetails" class="node-details-container">
+                            <p>Select a node to view details</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Chat Section -->
+            <div class="card" id="aiSection" style="display: none;">
+                <div class="card-header">
+                    <h3>🤖 Local AI Analysis</h3>
+                    <p>Ask questions about your product tree using your local Ollama model</p>
+                </div>
+                <div class="ai-chat" id="aiChat">
+                    <div class="ai-message">
+                        <div class="ai-avatar">🤖</div>
+                        <div class="ai-content">
+                            <p>Hello! I'm your local AI assistant powered by Ollama. I can help you analyze your product tree with:</p>
+                            <ul>
+                                <li>Deep analysis of your product hierarchy</li>
+                                <li>Identification of patterns and relationships</li>
+                                <li>Suggestions for improvements</li>
+                                <li>Complex reasoning about your product structure</li>
+                            </ul>
+                            <p><strong>Note:</strong> Make sure Ollama is running locally for AI features to work.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="ai-input">
+                    <input type="text" id="aiInput" placeholder="Ask me about your product tree..." class="ai-text-input">
+                    <button id="btnSendAI" class="btn btn-primary">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Work Item Modal -->
+    <div id="workItemModal" class="modal">
+        <div class="modal-content">
+            <span id="closeModal" class="close">&times;</span>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
