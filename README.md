@@ -1,21 +1,21 @@
 # Manage Product Tree
 
-A comprehensive product tree management system that provides tools for creating, editing, and managing product hierarchies. This tool includes web interfaces, AI-powered assistance, and deployment options.
+A comprehensive product tree management system that provides tools for creating, editing, and managing product hierarchies. This tool includes a web interface with AI-powered assistance using Ollama for intelligent suggestions.
 
 ## 🚀 Features
 
 - **Product Tree Editor**: Visual editor for creating and managing product trees
-- **AI-Powered Assistance**: Integration with AI services for intelligent suggestions
-- **Multiple Interfaces**: Web UI, AI-enhanced UI, and deployment-ready versions
+- **AI-Powered Assistance**: Integration with Ollama for intelligent suggestions
 - **XML Management**: Import/export product trees in XML format
 - **Real-time Collaboration**: Multiple users can work on the same product tree
 - **Version Control**: Track changes and maintain product tree history
 - **Deployment Ready**: Docker and PM2 deployment configurations
+- **Health Monitoring**: Built-in health check and Ollama status monitoring
 
 ## 📋 Prerequisites
 
 - Node.js 16+
-- Python 3.8+ (for AI features)
+- Ollama (for AI features)
 - npm or yarn
 - Modern web browser
 
@@ -23,8 +23,8 @@ A comprehensive product tree management system that provides tools for creating,
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/manage-product-tree.git
-   cd manage-product-tree
+   git clone https://github.com/future-gareth/manage-product-tree-tool.git
+   cd manage-product-tree-tool
    ```
 
 2. **Install Node.js dependencies:**
@@ -32,12 +32,21 @@ A comprehensive product tree management system that provides tools for creating,
    npm install
    ```
 
-3. **Set up Python environment (for AI features):**
+3. **Install Ollama (for AI features):**
    ```bash
-   cd dot
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
+   # macOS
+   brew install ollama
+
+   # Linux
+   curl -fsSL https://ollama.ai/install.sh | sh
+
+   # Windows
+   # Download from https://ollama.ai/download
+   ```
+
+4. **Pull a model for AI features:**
+   ```bash
+   ollama pull llama2
    ```
 
 ## ⚙️ Configuration
@@ -51,12 +60,9 @@ Create a `.env` file in the root directory:
 PORT=3000
 NODE_ENV=production
 
-# AI Service Configuration (optional)
-AI_SERVICE_URL=http://localhost:4000
-AI_ENABLED=true
-
-# Database Configuration
-DB_PATH=product_trees.db
+# Ollama Configuration
+OLLAMA_HOST=http://localhost:11434
+OLLAMA_MODEL=llama2
 ```
 
 ## 🚀 Usage
@@ -70,15 +76,15 @@ npm start
 
 ### 2. AI-Enhanced Interface
 
-```bash
-# Start the AI service first
-cd dot
-source venv/bin/activate
-python main.py
+The AI features are automatically available when Ollama is running:
 
-# In another terminal, start the web interface
-cd web-ai
+```bash
+# Start Ollama (if not already running)
+ollama serve
+
+# Start the web interface
 npm start
+# Navigate to http://localhost:3000/product-tree
 ```
 
 ### 3. Production Deployment
@@ -94,26 +100,19 @@ docker-compose up -d
 ## 📁 File Structure
 
 ```
-manage-product-tree/
-├── ui/                    # Basic web interface
-│   ├── index.html
-│   ├── styles.css
-│   └── app.js
-├── web/                   # Enhanced web interface
-│   ├── index.html
-│   ├── styles.css
-│   └── app.js
-├── web-ai/               # AI-enhanced interface
-│   ├── index.html
-│   ├── styles.css
-│   ├── app.js
-│   └── ollama-proxy.js
+manage-product-tree-tool/
 ├── web-deploy/           # Production deployment
 │   ├── server.js
 │   ├── package.json
 │   ├── Dockerfile
-│   └── ecosystem.config.js
-├── dot/                  # Python AI service
+│   ├── ecosystem.config.js
+│   ├── landing.html
+│   └── public/           # Frontend interface
+│       ├── index.html
+│       ├── styles.css
+│       ├── app.js
+│       └── fonts/
+├── dot/                  # Python AI service (legacy)
 │   ├── main.py
 │   ├── requirements.txt
 │   └── venv/
@@ -124,23 +123,28 @@ manage-product-tree/
 
 ### Product Tree Management
 ```http
-GET /api/trees                    # List all product trees
-POST /api/trees                   # Create new product tree
-GET /api/trees/:id                # Get specific product tree
-PUT /api/trees/:id                # Update product tree
-DELETE /api/trees/:id             # Delete product tree
+GET /product-tree          # Product tree editor interface
+GET /                      # Landing page
 ```
 
 ### AI Integration
 ```http
-POST /api/ai/suggest              # Get AI suggestions
-POST /api/ai/generate             # Generate product tree content
-GET /api/ai/status                # Check AI service status
+POST /api/ollama/generate  # Generate AI suggestions using Ollama
+GET /api/ollama/status     # Check Ollama service status
 ```
 
 ### Health Check
 ```http
-GET /health                       # Service health check
+GET /health                # Service health check
+```
+
+Response:
+```json
+{
+  "status": "healthy",
+  "timestamp": "2024-01-01T00:00:00.000Z",
+  "ollama_running": true
+}
 ```
 
 ## 🤖 AI Features
@@ -151,6 +155,15 @@ The AI-enhanced version includes:
 - **Content Generation**: Automatic generation of product descriptions
 - **Pattern Recognition**: Identify common patterns in product hierarchies
 - **Optimization Suggestions**: Recommendations for improving product tree organization
+
+### Ollama Integration
+
+The system integrates with Ollama for AI features:
+
+- **Automatic Detection**: Detects if Ollama is running
+- **Model Management**: Supports different Ollama models
+- **Real-time Generation**: Generate AI suggestions on demand
+- **Health Monitoring**: Monitors Ollama service status
 
 ## 🚀 Deployment Options
 
@@ -208,10 +221,9 @@ services:
 ## 🔒 Security
 
 - Input validation and sanitization
-- File upload restrictions
 - CORS configuration
-- Rate limiting
 - Error handling
+- Health monitoring
 
 ## 📊 Monitoring
 
@@ -225,9 +237,8 @@ Response:
 ```json
 {
   "status": "healthy",
-  "service": "Manage Product Tree",
-  "version": "1.0.0",
-  "uptime": "2h 30m"
+  "timestamp": "2024-01-01T00:00:00.000Z",
+  "ollama_running": true
 }
 ```
 
@@ -255,7 +266,7 @@ For support and questions:
 ### v1.0.0
 - Initial release
 - Product tree editor
-- AI integration
+- Ollama AI integration
 - Multiple deployment options
 - RESTful API
 - Docker support
