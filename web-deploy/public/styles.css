@@ -634,6 +634,49 @@ body {
   color: var(--gapi-black);
 }
 
+.message-content strong {
+  font-weight: 700;
+  color: var(--gapi-violet);
+}
+
+.message-content em {
+  font-style: italic;
+  color: var(--gapi-dark-gray);
+}
+
+.message-content code {
+  background: var(--gapi-light-gray);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+  color: var(--gapi-violet);
+}
+
+.message-content pre {
+  background: var(--gapi-light-gray);
+  padding: var(--gapi-spacing-sm);
+  border-radius: var(--gapi-radius-sm);
+  overflow-x: auto;
+  margin: var(--gapi-spacing-sm) 0;
+}
+
+.message-content pre code {
+  background: none;
+  padding: 0;
+  color: var(--gapi-black);
+}
+
+.message-content ul {
+  margin: var(--gapi-spacing-sm) 0;
+  padding-left: var(--gapi-spacing-lg);
+}
+
+.message-content li {
+  margin: var(--gapi-spacing-xs) 0;
+  color: var(--gapi-black);
+}
+
 /* === AI Input === */
 .ai-input-container {
   display: flex;
@@ -668,13 +711,13 @@ body {
 }
 
 .status-text {
-  color: var(--gapi-white);
+  color: var(--gapi-black);
   font-weight: 600;
 }
 
 /* === Item Count === */
 .item-count {
-  color: var(--gapi-white);
+  color: var(--gapi-black);
   font-weight: 600;
   font-size: 0.9rem;
 }

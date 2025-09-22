@@ -95,16 +95,18 @@ class ProductTreeManager {
   }
 
   showWelcomeMessage() {
-    const statusDiv = document.getElementById('importSummary');
-    if (!statusDiv) return;
-    
-    statusDiv.innerHTML = `
-      <div style="background: #e3f2fd; border-left: 4px solid #4a90e2; padding: 15px; border-radius: 8px;">
-        <h3 style="margin: 0 0 10px 0; color: #4a90e2;">🌳 Welcome to Product Tree Manager</h3>
-        <p style="margin: 0 0 10px 0;">Upload a Product Tree XML file to get started with managing your product hierarchy.</p>
-        <p style="margin: 0; font-size: 14px; color: #666;">
-          <strong>Features:</strong> Import XML, analyze with AI, export to XML/CSV, manage work items
-        </p>
+    // Welcome message removed - no popup shown
+  }
+
+  showTreeStatus(message, type = 'info') {
+    const treeContainer = document.getElementById('productTree');
+    if (!treeContainer) return;
+    const bg = type === 'error' ? '#fdecea' : '#eef2ff';
+    const border = type === 'error' ? '#f16360' : '#4a90e2';
+    const color = type === 'error' ? '#b71c1c' : '#1e3a8a';
+    treeContainer.innerHTML = `
+      <div style="background: ${bg}; border-left: 4px solid ${border}; padding: 14px; border-radius: 8px; color: ${color};">
+        ${message}
       </div>
     `;
   }
@@ -255,13 +257,13 @@ class ProductTreeManager {
     
     expandNode(this.productTree);
     this.renderTree();
-    this.showMessage('All nodes expanded!', 'success');
+    this.showMessage('All nodes expanded!');
   }
 
   collapseAll() {
     this.expandedNodes.clear();
     this.renderTree();
-    this.showMessage('All nodes collapsed!', 'success');
+    this.showMessage('All nodes collapsed!');
   }
 
   selectItem(nodeId) {
@@ -446,7 +448,7 @@ class ProductTreeManager {
   async handleFileSelect(file) {
     if (!file) return;
     
-    this.showMessage('Loading XML file...', 'info');
+    this.showTreeStatus('Loading XML file...', 'info');
     
     try {
       const text = await file.text();
@@ -469,7 +471,6 @@ class ProductTreeManager {
       
       if (this.productTree) {
         console.log('Parsed Product Tree:', this.productTree);
-        this.showMessage(`Product Tree loaded successfully! Found ${this.countNodes(this.productTree)} nodes.`, 'success');
         this.renderTree();
         
         // Auto-expand first few levels to show the structure (skip root node)
@@ -496,7 +497,7 @@ class ProductTreeManager {
       }
     } catch (error) {
       console.error('Error parsing XML:', error);
-      this.showMessage(`Error loading XML: ${error.message}`, 'error');
+      this.showTreeStatus(`Error loading XML: ${error.message}`, 'error');
     }
   }
 
@@ -585,8 +586,22 @@ class ProductTreeManager {
   }
 
   focusDot(nodeId) {
-    // Focus Dot functionality - placeholder for now
-    this.showMessage(`Focusing Dot on node: ${nodeId}`, 'info');
+    const node = this.findNodeById(this.productTree, nodeId);
+    if (!node) return;
+    
+    // Set the selected item for context
+    this.selectedItem = node;
+    this.renderTree(); // Update tree to show selection
+    
+    // Clear AI input and add focused message
+    const aiInput = document.getElementById('aiInput');
+    if (aiInput) {
+      aiInput.value = '';
+      aiInput.placeholder = `Ask Dot about "${node.title || node.name || 'this node'}"...`;
+    }
+    
+    // Add a focused message to the AI chat
+    this.addAIMessage('ai', `I'm now focused on "${node.title || node.name || 'this node'}". What would you like to know about it?`);
   }
 
   async sendAIMessage() {
@@ -604,14 +619,14 @@ class ProductTreeManager {
     this.addAIMessage('ai', '...', true);
 
     try {
-      const response = await fetch('/api/ai/chat', {
+      const response = await fetch('./api/ai/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
           message: message,
-          context: this.selectedItem ? `Current item: ${this.selectedItem.title}` : 'No item selected'
+          context: this.buildDetailedContext() // Use optimized detailed context
         })
       });
       
@@ -624,6 +639,127 @@ class ProductTreeManager {
     } catch (error) {
       this.updateLastAIMessage('Sorry, I\'m not available right now. Please try again later.');
     }
+  }
+
+  // Build detailed context for AI analysis (optimized for large trees)
+  buildDetailedContext() {
+    if (!this.selectedItem) {
+      return 'No item selected';
+    }
+
+    const context = {
+      selectedItem: {
+        id: this.selectedItem.id,
+        title: this.selectedItem.title,
+        type: this.selectedItem.type,
+        status: this.selectedItem.status,
+        priority: this.selectedItem.priority,
+        team: this.selectedItem.team,
+        summary: this.selectedItem.summary,
+        description: this.selectedItem.description
+      },
+      children: [],
+      parent: null,
+      siblings: []
+    };
+
+    // Add children details (limit to first 5 children to prevent huge context)
+    if (this.selectedItem.children && this.selectedItem.children.length > 0) {
+      const childrenToInclude = this.selectedItem.children.slice(0, 5);
+      context.children = childrenToInclude.map(child => ({
+        id: child.id,
+        title: child.title,
+        type: child.type,
+        status: child.status,
+        priority: child.priority,
+        team: child.team,
+        summary: child.summary,
+        description: child.description
+      }));
+      
+      // Add note if there are more children
+      if (this.selectedItem.children.length > 5) {
+        context.children.push({
+          id: 'more-children',
+          title: `... and ${this.selectedItem.children.length - 5} more children`,
+          type: 'note',
+          status: 'info'
+        });
+      }
+    }
+
+    // Find parent and siblings
+    const parent = this.findParent(this.productTree, this.selectedItem.id);
+    if (parent) {
+      context.parent = {
+        id: parent.id,
+        title: parent.title,
+        type: parent.type,
+        status: parent.status,
+        priority: parent.priority
+      };
+
+      // Add siblings (limit to first 3 siblings)
+      if (parent.children) {
+        const siblings = parent.children.filter(sibling => sibling.id !== this.selectedItem.id);
+        const siblingsToInclude = siblings.slice(0, 3);
+        context.siblings = siblingsToInclude.map(sibling => ({
+          id: sibling.id,
+          title: sibling.title,
+          type: sibling.type,
+          status: sibling.status,
+          priority: sibling.priority
+        }));
+        
+        // Add note if there are more siblings
+        if (siblings.length > 3) {
+          context.siblings.push({
+            id: 'more-siblings',
+            title: `... and ${siblings.length - 3} more siblings`,
+            type: 'note',
+            status: 'info'
+          });
+        }
+      }
+    }
+
+    const contextString = JSON.stringify(context);
+    console.log('Generated context length:', contextString.length);
+    console.log('Context preview:', contextString.substring(0, 200) + '...');
+    return contextString;
+  }
+
+  // Helper function to find parent of a node
+  findParent(node, targetId) {
+    if (node.children) {
+      for (const child of node.children) {
+        if (child.id === targetId) {
+          return node;
+        }
+        const found = this.findParent(child, targetId);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
+  // Simple markdown parser for AI responses
+  parseMarkdown(text) {
+    return text
+      // Bold text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      // Italic text
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      // Code blocks
+      .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+      // Inline code
+      .replace(/`(.*?)`/g, '<code>$1</code>')
+      // Line breaks
+      .replace(/\n/g, '<br>')
+      // Lists (simple bullet points)
+      .replace(/^[\s]*[-*]\s+(.+)$/gm, '<li>$1</li>')
+      // Wrap consecutive list items in ul
+      .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
   }
 
   addAIMessage(type, content, isTyping = false) {
@@ -643,12 +779,14 @@ class ProductTreeManager {
         </div>
       `;
     } else {
+      // Parse markdown for AI messages
+      const formattedContent = this.parseMarkdown(content);
       messageDiv.innerHTML = `
         <div class="message-avatar">
           <i class="fas fa-robot"></i>
         </div>
         <div class="message-content">
-          <p>${content}</p>
+          <div>${formattedContent}</div>
         </div>
       `;
     }
@@ -667,8 +805,11 @@ class ProductTreeManager {
     
     const lastMessage = messagesContainer.querySelector('.ai-message.ai.typing');
     if (lastMessage) {
-      lastMessage.querySelector('.message-content p').textContent = content;
-      lastMessage.classList.remove('typing');
+      const contentElement = lastMessage.querySelector('.message-content div') || lastMessage.querySelector('.message-content p');
+      if (contentElement) {
+        contentElement.innerHTML = this.parseMarkdown(content);
+        lastMessage.classList.remove('typing');
+      }
     }
   }
 
@@ -698,7 +839,7 @@ class ProductTreeManager {
   refresh() {
     this.showMessage('Refreshing...', 'info');
     setTimeout(() => {
-      this.showMessage('Refreshed successfully!', 'success');
+      this.showMessage('Refreshed successfully!');
     }, 1000);
   }
 
@@ -707,7 +848,7 @@ class ProductTreeManager {
     this.selectedItem = null;
     this.productTree = null;
     this.renderTree();
-    this.showMessage('Cache cleared!', 'success');
+    this.showMessage('Cache cleared!');
   }
 
   exportXML() {

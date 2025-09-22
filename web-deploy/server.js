@@ -4,136 +4,71 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const path = require('path');
-const { spawn } = require('child_process');
-const fs = require('fs');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Serve static files from public directory
 app.use(express.static(path.join(__dirname, 'public')));
-
-// Serve the landing page as default
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'landing.html'));
-});
-
-// Serve the Product Tree Manager
-app.get('/product-tree', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.json({ 
         status: 'healthy', 
         timestamp: new Date().toISOString(),
-        ollama_running: isOllamaRunning()
+        ai_service: 'centralised-ai-service'
     });
 });
 
-// Global variables for Ollama process
-let ollamaProcess = null;
-let ollamaRunning = false;
+// Test endpoint
+app.get('/api/test', (req, res) => {
+    console.log('Test endpoint called');
+    res.json({ status: 'ok', message: 'Server is responding' });
+});
 
-// Function to check if Ollama is running
-function isOllamaRunning() {
-    return ollamaRunning;
-}
-
-// Function to start Ollama
-function startOllama() {
-    return new Promise((resolve, reject) => {
-        console.log('🔧 Starting Ollama service...');
-        
-        ollamaProcess = spawn('ollama', ['serve'], {
-            stdio: ['ignore', 'pipe', 'pipe'],
-            detached: false
-        });
-
-        ollamaProcess.stdout.on('data', (data) => {
-            console.log(`Ollama: ${data}`);
-        });
-
-        ollamaProcess.stderr.on('data', (data) => {
-            console.error(`Ollama Error: ${data}`);
-        });
-
-        ollamaProcess.on('close', (code) => {
-            console.log(`Ollama process exited with code ${code}`);
-            ollamaRunning = false;
-        });
-
-        ollamaProcess.on('error', (error) => {
-            console.error('Failed to start Ollama:', error);
-            ollamaRunning = false;
-            reject(error);
-        });
-
-        // Wait a moment for Ollama to start
-        setTimeout(() => {
-            ollamaRunning = true;
-            console.log('✅ Ollama service started');
-            resolve();
-        }, 3000);
+// Test API endpoint
+app.get('/api/test', (req, res) => {
+    console.log('🧪 Test API endpoint called');
+    res.json({ 
+        message: 'API routing is working!',
+        timestamp: new Date().toISOString()
     });
-}
+});
 
-// Function to check if model exists
-async function checkModel(modelName = 'llama3.2:3b') {
+// Function to call the Centralised AI Service
+async function callCentralisedAI(prompt, context = '') {
     try {
-        const response = await axios.get('http://localhost:11434/api/tags');
-        const models = response.data.models || [];
-        return models.some(model => model.name === modelName);
-    } catch (error) {
-        return false;
-    }
-}
-
-// Function to pull model if it doesn't exist
-async function pullModel(modelName = 'llama3.2:3b') {
-    try {
-        console.log(`📥 Pulling model: ${modelName}`);
-        const response = await axios.post('http://localhost:11434/api/pull', {
-            name: modelName,
-            stream: false
+        // Use environment variable for AI service port, default to 4000 for server
+        const aiServicePort = process.env.AI_SERVICE_PORT || '4000';
+        const response = await axios.post(`http://127.0.0.1:${aiServicePort}/internal/ai/generate`, {
+            prompt: prompt,
+            context: context,
+            task_type: 'product_tree_analysis',
+            max_tokens: 2048,
+            temperature: 0.7,
+            top_p: 0.9
+        }, {
+            headers: { 'Content-Type': 'application/json' },
+            timeout: 15000  // Reduced timeout since we're sending smaller requests
         });
-        console.log(`✅ Model ${modelName} pulled successfully`);
-        return true;
-    } catch (error) {
-        console.error(`❌ Failed to pull model ${modelName}:`, error.message);
-        return false;
-    }
-}
 
-// Initialize Ollama on startup
-async function initializeOllama() {
-    try {
-        // Check if Ollama is already running
-        try {
-            await axios.get('http://localhost:11434/api/tags');
-            ollamaRunning = true;
-            console.log('✅ Ollama is already running');
-        } catch (error) {
-            // Ollama not running, start it
-            await startOllama();
-        }
-
-        // Check if model exists
-        const modelName = 'llama3.2:3b';
-        const modelExists = await checkModel(modelName);
-        
-        if (!modelExists) {
-            console.log(`📥 Model ${modelName} not found, pulling...`);
-            await pullModel(modelName);
+        if (response.status === 200) {
+            return response.data.response;
         } else {
-            console.log(`✅ Model ${modelName} is available`);
+            throw new Error(`AI service returned status ${response.status}`);
         }
-
     } catch (error) {
-        console.error('❌ Failed to initialize Ollama:', error.message);
+        console.error('Error calling Centralised AI Service:', error.message);
+        console.error('Full error:', error);
+        if (error.response) {
+            console.error('Response status:', error.response.status);
+            console.error('Response data:', error.response.data);
+        }
+        throw error;
     }
 }
 
@@ -142,23 +77,20 @@ async function initializeOllama() {
 // Check AI status
 app.get('/api/ai/status', async (req, res) => {
     try {
-        if (!ollamaRunning) {
-            return res.status(500).json({ 
-                status: 'error',
-                message: 'Ollama is not running'
-            });
-        }
-
-        const response = await axios.get('http://localhost:11434/api/tags');
+        // Test connection to Centralised AI Service
+        // Use environment variable for AI service port, default to 4000 for server
+        const aiServicePort = process.env.AI_SERVICE_PORT || '4000';
+        const response = await axios.get(`http://127.0.0.1:${aiServicePort}/health`, { timeout: 5000 });
+        
         res.json({ 
             status: 'connected',
-            models: response.data.models || [],
-            ollama_running: true
+            ai_service: 'centralised-ai-service',
+            service_status: response.data.status || 'unknown'
         });
     } catch (error) {
         res.status(500).json({ 
             status: 'error',
-            message: 'Ollama is not accessible',
+            message: 'Centralised AI Service is not accessible',
             error: error.message
         });
     }
@@ -166,148 +98,165 @@ app.get('/api/ai/status', async (req, res) => {
 
 // Chat with AI
 app.post('/api/ai/chat', async (req, res) => {
+    console.log('📨 Received AI chat request:', req.body);
     try {
-        const { message, model = 'llama3.2:3b', context } = req.body;
+        const { message, context } = req.body;
         
         if (!message) {
             return res.status(400).json({ error: 'Message is required' });
         }
 
-        if (!ollamaRunning) {
-            return res.status(500).json({ 
-                error: 'Ollama is not running. Please restart the server.'
-            });
-        }
-
         // Build the prompt with context
         let prompt = message;
-        if (context && context.productTree) {
-            prompt = `You are analyzing a product tree with ${context.productTree.nodes.length} nodes and ${context.productTree.edges.length} relationships.
+        
+        // Handle different context formats
+        if (context) {
+            if (typeof context === 'string') {
+                try {
+                    // Try to parse as JSON first (detailed context)
+                    const contextObj = JSON.parse(context);
+                    if (contextObj.selectedItem) {
+                        // Detailed context from frontend
+                        prompt = `You are analyzing the product tree item "${contextObj.selectedItem.title}" (${contextObj.selectedItem.type}).
 
-Product Tree Context:
-${JSON.stringify(context.productTree, null, 2)}
+CURRENT ITEM DETAILS:
+- Title: ${contextObj.selectedItem.title}
+- Type: ${contextObj.selectedItem.type}
+- Status: ${contextObj.selectedItem.status || 'Not specified'}
+- Priority: ${contextObj.selectedItem.priority || 'Not specified'}
+- Team: ${contextObj.selectedItem.team || 'Not specified'}
+- Summary: ${contextObj.selectedItem.summary || 'No summary available'}
+- Description: ${contextObj.selectedItem.description || 'No description available'}
+
+CHILDREN (${contextObj.children.length} items):
+${contextObj.children.map(child => `- ${child.title} (${child.type}, Status: ${child.status || 'Not specified'}, Priority: ${child.priority || 'Not specified'})`).join('\n')}
+
+PARENT CONTEXT:
+${contextObj.parent ? `- Parent: ${contextObj.parent.title} (${contextObj.parent.type}, Status: ${contextObj.parent.status || 'Not specified'})` : 'No parent (root level)'}
+
+SIBLINGS (${contextObj.siblings.length} items):
+${contextObj.siblings.map(sibling => `- ${sibling.title} (${sibling.type}, Status: ${sibling.status || 'Not specified'})`).join('\n')}
+
+User Question: ${message}
+
+Please provide specific, actionable analysis based on the actual data above. Focus on:
+1. Current progress and status of the selected item
+2. Progress of child items and their impact
+3. Dependencies and relationships
+4. Specific recommendations for improvement
+5. Risk factors and bottlenecks
+
+Be specific and reference the actual items mentioned above.`;
+                    } else {
+                        // Fallback to simple string context
+                        prompt = `${context}
+
+User Question: ${message}
+
+Please provide helpful analysis and recommendations.`;
+                    }
+                } catch (e) {
+                    // Not JSON, treat as simple string
+                    prompt = `${context}
+
+User Question: ${message}
+
+Please provide helpful analysis and recommendations.`;
+                }
+            } else if (context.productTree) {
+                // Context is an object with productTree (from other tools)
+                const treeSummary = {
+                    totalNodes: context.productTree.nodes?.length || 0,
+                    totalEdges: context.productTree.edges?.length || 0,
+                    rootNodes: context.productTree.children?.map(child => ({
+                        id: child.id,
+                        title: child.title,
+                        type: child.type,
+                        childrenCount: child.children?.length || 0
+                    })) || []
+                };
+                
+                prompt = `You are analyzing a product tree with ${treeSummary.totalNodes} nodes and ${treeSummary.totalEdges} relationships.
+
+Product Tree Summary:
+${JSON.stringify(treeSummary, null, 2)}
 
 User Question: ${message}
 
 Please provide a detailed analysis focusing on the product tree structure, relationships, and any insights or recommendations.`;
+            }
         }
 
-        const response = await axios.post('http://localhost:11434/api/generate', {
-            model: model,
-            prompt: prompt,
-            stream: false,
-            options: {
-                temperature: 0.7,
-                top_p: 0.9,
-                max_tokens: 1000
-            }
-        });
+        console.log('Calling Centralised AI Service with prompt:', prompt.substring(0, 100) + '...');
+        
+        const aiResponse = await callCentralisedAI(prompt, context);
+        console.log('AI Response received:', aiResponse ? 'Success' : 'Empty response');
 
         res.json({
-            response: response.data.response,
-            model: model,
-            done: response.data.done
+            response: aiResponse,
+            model: 'centralised-ai-service',
+            done: true
         });
 
     } catch (error) {
         console.error('AI API error:', error.message);
+        console.error('Full error:', error);
+        console.error('Error stack:', error.stack);
         res.status(500).json({ 
-            error: 'Failed to communicate with AI',
+            error: 'Failed to communicate with Centralised AI Service',
             details: error.message
         });
     }
 });
 
-// Get available models
+// Get available models (redirect to Centralised AI Service)
 app.get('/api/ai/models', async (req, res) => {
     try {
-        if (!ollamaRunning) {
-            return res.status(500).json({ 
-                error: 'Ollama is not running'
-            });
-        }
-
-        const response = await axios.get('http://localhost:11434/api/tags');
+        const response = await axios.get('http://localhost:4000/models', { timeout: 5000 });
+        
         res.json({
             models: response.data.models || [],
-            default: 'llama3.2:3b'
+            default: 'centralised-ai-service',
+            service: 'centralised-ai-service'
         });
     } catch (error) {
         res.status(500).json({ 
-            error: 'Failed to get models',
+            error: 'Failed to get models from Centralised AI Service',
             details: error.message
         });
     }
 });
 
-// Pull a new model
+// Pull a new model (not applicable for Centralised AI Service)
 app.post('/api/ai/pull-model', async (req, res) => {
-    try {
-        const { model } = req.body;
-        if (!model) {
-            return res.status(400).json({ error: 'Model name is required' });
-        }
+    res.status(400).json({ 
+        error: 'Model management is handled by the Centralised AI Service',
+        message: 'Please use the Centralised AI Service interface to manage models'
+    });
+});
 
-        if (!ollamaRunning) {
-            return res.status(500).json({ 
-                error: 'Ollama is not running'
-            });
-        }
-
-        const success = await pullModel(model);
-        
-        if (success) {
-            res.json({
-                success: true,
-                model: model,
-                message: 'Model pulled successfully'
-            });
-        } else {
-            res.status(500).json({ 
-                error: 'Failed to pull model'
-            });
-        }
-    } catch (error) {
-        res.status(500).json({ 
-            error: 'Failed to pull model',
-            details: error.message
-        });
-    }
+// Serve index.html for all other routes (SPA routing)
+app.get('/*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Start server
-app.listen(PORT, async () => {
+app.listen(PORT, () => {
     console.log(`🚀 Product Tree Manager Server running on http://localhost:${PORT}`);
     console.log(`📱 Open http://localhost:${PORT} in your browser`);
     console.log('');
-    
-    // Initialize Ollama
-    await initializeOllama();
-    
-    console.log('');
     console.log('🎉 Server is ready!');
-    console.log(`🤖 AI: Ollama with llama3.2:3b model`);
+    console.log(`🤖 AI: Centralised AI Service`);
     console.log(`🌐 Web: http://localhost:${PORT}`);
 });
 
 // Handle graceful shutdown
 process.on('SIGINT', () => {
     console.log('\n🛑 Shutting down server...');
-    
-    if (ollamaProcess) {
-        console.log('🛑 Stopping Ollama...');
-        ollamaProcess.kill('SIGTERM');
-    }
-    
     process.exit(0);
 });
 
 process.on('SIGTERM', () => {
     console.log('\n🛑 Received SIGTERM, shutting down gracefully...');
-    
-    if (ollamaProcess) {
-        ollamaProcess.kill('SIGTERM');
-    }
-    
     process.exit(0);
 });
