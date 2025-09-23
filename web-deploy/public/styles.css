@@ -33,6 +33,13 @@
   --gapi-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.15);
 }
 
+/* Ensure headings are not bold */
+h1, h2, h3, h4, h5, h6 { font-weight: 400 !important; }
+.panel-header h3 { font-weight: 400 !important; }
+.tree-empty h4 { font-weight: 400 !important; }
+.item-details h2 { font-weight: 400 !important; }
+.modal-header h3 { font-weight: 400 !important; }
+
 /* === Local Font Faces === */
 @font-face {
   font-family: 'Madimi One';
